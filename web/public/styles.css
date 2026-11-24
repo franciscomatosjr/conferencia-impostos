@@ -329,3 +329,6 @@ input, select { min-height: 42px; }
 .faq details p { margin: 0; padding: 12px 14px; }
 .voltar { margin-top: 8px; }
 .panel h2 { scroll-margin-top: 90px; }
+.foot .autor { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text); }
+.foot .autor a { display: inline-flex; align-items: center; gap: 6px; }
+.foot .autor svg { width: 16px; height: 16px; }
