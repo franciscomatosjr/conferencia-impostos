@@ -1,46 +1,51 @@
+/* Paleta inspirada no Padrão Digital de Governo (gov.br DS), usado pelo site da Receita Federal. */
 :root {
-  --bg: #f6f7f9;
+  --bg: #f8f8f8;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --text: #16191f;
-  --muted: #5d6573;
-  --border: #dde1e7;
-  --accent: #0b6e4f;
-  --accent-2: #0d8a63;
+  --surface-2: #ededed;
+  --text: #333333;
+  --muted: #555555;
+  --border: #cccccc;
+  --accent: #1351b4;       /* blue-warm-vivid-70 (primária) */
+  --accent-2: #0c326f;     /* blue-warm-vivid-80 (hover) */
   --on-accent: #ffffff;
-  --ok: #0b7a43;
-  --ok-bg: #e5f5ec;
-  --warn: #9a5b00;
-  --warn-bg: #fff3dc;
-  --bad: #b42318;
-  --bad-bg: #fde8e6;
-  --info-bg: #e8f0fb;
-  --series-1: #0b6e4f;
-  --series-2: #3a5bd9;
-  --radius: 10px;
-  --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
+  --header-bg: #ffffff;
+  --brand-band: #071d41;   /* blue-warm-vivid-90 */
+  --ok: #168821;
+  --ok-bg: #e3f5e1;
+  --warn: #8a5f00;
+  --warn-bg: #fff5c2;
+  --bad: #e52207;
+  --bad-bg: #fde0db;
+  --info-bg: #dbe8fb;
+  --series-1: #1351b4;
+  --series-2: #d98c00;
+  --radius: 6px;
+  --shadow: 0 1px 6px rgba(0, 0, 0, .16);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1216;
-    --surface: #171b21;
-    --surface-2: #1f242c;
-    --text: #e8eaee;
-    --muted: #9aa3b2;
-    --border: #2b313b;
-    --accent: #3ccf97;
-    --accent-2: #5fe0ad;
-    --on-accent: #08130f;
-    --ok: #4ad694;
-    --ok-bg: #12301f;
-    --warn: #f2b443;
-    --warn-bg: #33270e;
-    --bad: #ff7a6e;
-    --bad-bg: #3a1714;
-    --info-bg: #17243a;
-    --series-1: #3ccf97;
-    --series-2: #7d97ff;
+    --bg: #071d41;
+    --surface: #0c2652;
+    --surface-2: #133466;
+    --text: #ffffff;
+    --muted: #c5d4eb;
+    --border: #2a4a7f;
+    --accent: #c5d4eb;
+    --accent-2: #ffffff;
+    --on-accent: #071d41;
+    --header-bg: #0c326f;
+    --brand-band: #c5d4eb;
+    --ok: #5fd068;
+    --ok-bg: #0f3a1a;
+    --warn: #ffcd07;
+    --warn-bg: #3d3300;
+    --bad: #ff8a75;
+    --bad-bg: #4a1208;
+    --info-bg: #133466;
+    --series-1: #81aefc;
+    --series-2: #ffb733;
     --shadow: none;
     color-scheme: dark;
   }
@@ -66,7 +71,7 @@ h3 { font-size: 1.02rem; }
 [hidden] { display: none !important; }
 
 /* header */
-.top { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.top { background: var(--header-bg); border-top: 4px solid var(--brand-band); box-shadow: var(--shadow); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .top-inner { display: flex; align-items: center; justify-content: space-between; height: 56px; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 1.1rem; }
 .brand svg { width: 28px; height: 28px; color: var(--accent); }
@@ -83,7 +88,7 @@ h3 { font-size: 1.02rem; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs a { padding: 10px 14px; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; font-weight: 500; }
 .tabs a:hover { color: var(--text); }
-.tabs a[aria-selected="true"] { color: var(--accent); border-color: var(--accent); }
+.tabs a[aria-selected="true"] { color: var(--accent); border-color: var(--accent); border-bottom-width: 4px; font-weight: 600; }
 
 .panel { padding: 24px 0 40px; }
 .panel-head { max-width: 820px; margin-bottom: 18px; }
@@ -119,7 +124,7 @@ legend { font-weight: 600; padding: 0 6px; font-size: .9rem; }
 .aliq-note { margin: 0 0 10px; font-size: .85rem; }
 
 .btn {
-  font: inherit; font-weight: 600; background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent);
+  font: inherit; font-weight: 600; border-radius: 100em !important; background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent);
   padding: 9px 16px; border-radius: 8px; cursor: pointer;
 }
 .btn:hover { background: var(--accent-2); }
