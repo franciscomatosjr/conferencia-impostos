@@ -1,0 +1,26 @@
+# Gerador oficial do DANFSe (Go), baixado do GitHub da Receita Federal em commit fixo.
+ARG DANFSE_REPO=https://github.com/ReceitaFederal/calculadora-rtc-gerador-danfse.git
+ARG DANFSE_REF=8d79e6b2f7fad6375340afcb51c85ed370c64a14
+
+FROM alpine/git:latest AS src
+ARG DANFSE_REPO
+ARG DANFSE_REF
+WORKDIR /src
+RUN git init -q . && git fetch -q --depth 1 "$DANFSE_REPO" "$DANFSE_REF" && git checkout -q FETCH_HEAD
+
+FROM golang:1.27 AS build
+ARG TARGETARCH
+WORKDIR /app
+COPY --from=src /src/ ./
+RUN go mod download
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6 && /go/bin/swag init -g cmd/danfse/main.go -o ./api/swagger
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -o danfse-service ./cmd/danfse
+
+FROM alpine:3.22
+RUN apk add --no-cache ca-certificates tzdata && adduser -D -u 10001 app
+ENV TZ=America/Sao_Paulo
+WORKDIR /app
+COPY --from=build /app/danfse-service .
+USER app
+EXPOSE 8080
+ENTRYPOINT ["./danfse-service"]

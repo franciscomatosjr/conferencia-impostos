@@ -1,0 +1,53 @@
+name: conferencia-impostos
+
+services:
+  regime-regular:
+    build:
+      context: ./services
+      target: regime-regular
+    image: conferencia-impostos/regime-regular
+    restart: unless-stopped
+    mem_limit: 1200m
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
+
+  simples-nacional:
+    build:
+      context: ./services
+      target: simples-nacional
+    image: conferencia-impostos/simples-nacional
+    restart: unless-stopped
+    mem_limit: 900m
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8082' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
+
+  danfse:
+    build:
+      context: ./services
+      dockerfile: Dockerfile.danfse
+    image: conferencia-impostos/danfse
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      XML_MAX_SIZE_BYTES: "2097152"
+
+  web:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    depends_on:
+      - regime-regular
+      - simples-nacional
+      - danfse
+    ports:
+      - "${PORT:-8000}:80"
+    volumes:
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./web/public:/usr/share/nginx/html:ro

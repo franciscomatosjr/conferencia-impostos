@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confere RTC · CBS, IBS e Imposto Seletivo</title>
+  <meta name="description" content="Confira e compare CBS, IBS e Imposto Seletivo usando as calculadoras oficiais da Receita Federal (Reforma Tributária do Consumo).">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#nfe">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><path d="M9 16.5l4.5 4.5L23 11.5" stroke="var(--on-accent)" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Confere <b>RTC</b></span>
+      </a>
+      <span id="status" class="status" title="Status das calculadoras oficiais">verificando…</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>Confira e compare CBS, IBS e Imposto Seletivo</h1>
+      <p>Os cálculos são feitos pelas <strong>calculadoras oficiais da Receita Federal</strong> (código aberto, licença MIT), as mesmas publicadas no GitHub para a Reforma Tributária do Consumo (LC 214/2025).</p>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <a role="tab" href="#nfe" data-tab="nfe">Conferir NF-e (XML)</a>
+      <a role="tab" href="#operacao" data-tab="operacao">Simular operação</a>
+      <a role="tab" href="#comparar" data-tab="comparar">Regular × Simples</a>
+      <a role="tab" href="#consultas" data-tab="consultas">Consultas</a>
+      <a role="tab" href="#danfse" data-tab="danfse">DANFSe</a>
+    </nav>
+
+    <!-- ============ CONFERIR NF-e ============ -->
+    <section class="panel" id="tab-nfe" hidden>
+      <div class="panel-head">
+        <h2>Conferir os tributos de uma NF-e / NFC-e</h2>
+        <p>Envie o XML da nota (modelo 55 ou 65, leiaute da reforma). O site lê os grupos <code>IBSCBS</code> e <code>IS</code> de cada item, recalcula tudo na calculadora oficial do regime regular e mostra as diferenças. <strong>O arquivo é lido no seu navegador</strong>; só os dados de cálculo (NCM, CST, cClassTrib, base e alíquotas) são enviados à calculadora.</p>
+      </div>
+      <label class="drop" id="nfe-drop">
+        <input type="file" id="nfe-file" accept=".xml,text/xml,application/xml" multiple>
+        <span class="drop-title">Arraste o XML aqui ou clique para escolher</span>
+        <span class="drop-sub">Pode enviar várias notas de uma vez</span>
+      </label>
+      <p class="hint">Sem um XML à mão? <button type="button" class="link" id="nfe-exemplo">Usar uma nota de exemplo</button></p>
+      <div id="nfe-result"></div>
+    </section>
+
+    <!-- ============ SIMULAR OPERAÇÃO ============ -->
+    <section class="panel" id="tab-operacao" hidden>
+      <div class="panel-head">
+        <h2>Simular e conferir uma operação (regime regular)</h2>
+        <p>Monte a operação item a item. Se quiser conferir valores já calculados (pelo seu ERP, por exemplo), preencha as colunas “informado” e veja se batem com o cálculo oficial.</p>
+      </div>
+      <form id="op-form" class="card form" autocomplete="off">
+        <div class="grid g4">
+          <label>Data do fato gerador<input type="date" name="data" required></label>
+          <label>UF<select name="uf" required></select></label>
+          <label class="span2">Município (código IBGE)<input name="municipio" inputmode="numeric" pattern="\d{7}" required placeholder="ex.: 3550308 (São Paulo)"></label>
+        </div>
+        <div class="aliq-box" data-aliq-box>
+          <p class="aliq-note">A partir de 2027 a calculadora exige as <strong>alíquotas nominais</strong> (ainda não há alíquotas de referência publicadas para esses anos). Valores sugeridos de 2027–2028: CBS 8,8%, IBS 0,05% + 0,05%.</p>
+          <div class="grid g4">
+            <label>CBS (%)<input name="aCbs" type="number" step="0.0001" min="0" max="100" value="8.8"></label>
+            <label>IBS estadual (%)<input name="aIbsUf" type="number" step="0.0001" min="0" max="100" value="0.05"></label>
+            <label>IBS municipal (%)<input name="aIbsMun" type="number" step="0.0001" min="0" max="100" value="0.05"></label>
+            <label>IS ad valorem (%)<input name="aIs" type="number" step="0.0001" min="0" max="100" placeholder="só se houver IS"></label>
+          </div>
+        </div>
+        <div class="items-head">
+          <h3>Itens</h3>
+          <button type="button" class="btn ghost sm" id="op-add">+ Adicionar item</button>
+        </div>
+        <div id="op-items" class="items"></div>
+        <div class="actions">
+          <button class="btn" type="submit">Calcular na calculadora oficial</button>
+          <button class="btn ghost" type="button" id="op-exemplo">Carregar exemplo</button>
+        </div>
+      </form>
+      <div id="op-result"></div>
+    </section>
+
+    <!-- ============ COMPARAR REGIMES ============ -->
+    <section class="panel" id="tab-comparar" hidden>
+      <div class="panel-head">
+        <h2>Regime regular × Simples Nacional</h2>
+        <p>Calcule a mesma venda nas duas calculadoras oficiais e compare quanto de CBS e IBS sai em cada regime — e quanto de crédito o seu cliente pode aproveitar.</p>
+      </div>
+      <form id="cmp-form" class="card form" autocomplete="off">
+        <fieldset>
+          <legend>Operação</legend>
+          <div class="grid g4">
+            <label>Data do fato gerador<input type="date" name="data" required></label>
+            <label>UF<select name="uf" required></select></label>
+            <label>Município (IBGE)<input name="municipio" inputmode="numeric" pattern="\d{7}" required placeholder="3550308"></label>
+            <label>Valor da venda (R$)<input name="valor" type="number" step="0.01" min="0.01" required value="10000.00"></label>
+          </div>
+          <div class="grid g4">
+            <label>Tipo<select name="tipo"><option value="ncm">Mercadoria (NCM)</option><option value="nbs">Serviço (NBS)</option></select></label>
+            <label><span data-codigo-label>NCM</span><input name="codigo" inputmode="numeric" required value="94036000"></label>
+            <label>CST (regime regular)<input name="cst" inputmode="numeric" pattern="\d{3}" required value="000"></label>
+            <label>cClassTrib<input name="cClassTrib" inputmode="numeric" pattern="\d{6}" required value="000001" list="dl-classtrib"></label>
+          </div>
+        </fieldset>
+        <div class="grid g2 sides">
+          <fieldset>
+            <legend>Regime regular</legend>
+            <div class="aliq-box" data-aliq-box>
+              <p class="aliq-note">A partir de 2027, informe as alíquotas nominais.</p>
+              <div class="grid g3">
+                <label>CBS (%)<input name="aCbs" type="number" step="0.0001" min="0" value="8.8"></label>
+                <label>IBS UF (%)<input name="aIbsUf" type="number" step="0.0001" min="0" value="0.05"></label>
+                <label>IBS Mun. (%)<input name="aIbsMun" type="number" step="0.0001" min="0" value="0.05"></label>
+              </div>
+            </div>
+            <p class="muted small" data-aliq-2026>Em 2026 a calculadora usa as alíquotas de teste de referência (CBS 0,9% e IBS 0,1%).</p>
+          </fieldset>
+          <fieldset>
+            <legend>Simples Nacional</legend>
+            <div class="grid g2">
+              <label class="span3">Atividade (cAtivSN)<select name="cAtivSN" id="cmp-ativ"><option value="">carregando…</option></select></label>
+              <label>CBS efetiva (%)<input name="pCBSSN" inputmode="decimal" required value="2.3591"></label>
+              <label>IBS efetiva (%)<input name="pIBSSN" inputmode="decimal" required value="0.0260"></label>
+            </div>
+            <p class="muted small">As alíquotas efetivas vêm do PGDAS-D (tabela de alíquotas efetivas do contribuinte no período).</p>
+          </fieldset>
+        </div>
+        <div class="actions"><button class="btn" type="submit">Comparar regimes</button></div>
+      </form>
+      <div id="cmp-result"></div>
+    </section>
+
+    <!-- ============ CONSULTAS ============ -->
+    <section class="panel" id="tab-consultas" hidden>
+      <div class="panel-head">
+        <h2>Consultas às tabelas oficiais</h2>
+        <p>Classificações tributárias (cClassTrib), NCM e situações tributárias, direto da base de dados da calculadora.</p>
+      </div>
+      <div class="grid g2">
+        <form class="card form" id="q-classtrib">
+          <h3>cClassTrib</h3>
+          <div class="grid g2">
+            <label>Código<input name="c" inputmode="numeric" pattern="\d{6}" required placeholder="200028" list="dl-classtrib"></label>
+            <label>Data<input type="date" name="data" required></label>
+          </div>
+          <button class="btn sm">Consultar</button>
+        </form>
+        <form class="card form" id="q-ncm">
+          <h3>NCM</h3>
+          <div class="grid g2">
+            <label>NCM<input name="ncm" inputmode="numeric" required placeholder="22030000"></label>
+            <label>Data<input type="date" name="data" required></label>
+          </div>
+          <button class="btn sm">Consultar</button>
+        </form>
+      </div>
+      <div id="q-result"></div>
+      <div class="card">
+        <div class="items-head">
+          <h3>Classificações tributárias vigentes</h3>
+          <input id="ct-filter" class="filter" placeholder="Filtrar por código ou descrição…">
+        </div>
+        <div id="ct-table" class="table-wrap"><p class="muted">Carregando…</p></div>
+      </div>
+    </section>
+
+    <!-- ============ DANFSe ============ -->
+    <section class="panel" id="tab-danfse" hidden>
+      <div class="panel-head">
+        <h2>Gerar o DANFSe (PDF) a partir do XML da NFS-e</h2>
+        <p>Usa o gerador oficial do DANFSe publicado pela Receita Federal.</p>
+      </div>
+      <form id="danfse-form" class="card form">
+        <label class="drop compact">
+          <input type="file" name="xml" accept=".xml,text/xml,application/xml" required>
+          <span class="drop-title">Escolher XML da NFS-e</span>
+        </label>
+        <div class="grid g3">
+          <label>Situação<select name="stc"><option value="0">Válida</option><option value="1">Substituída</option><option value="2">Cancelada</option></select></label>
+          <label class="check"><input type="checkbox" name="canhoto" checked> Incluir canhoto</label>
+        </div>
+        <div class="actions"><button class="btn">Gerar PDF</button></div>
+      </form>
+      <div id="danfse-result"></div>
+    </section>
+
+    <datalist id="dl-classtrib"></datalist>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p><strong>Aviso:</strong> ferramenta de conferência. Não é conselho jurídico ou contábil e não substitui o seu sistema emissor nem o seu contador. A classificação de cada produto ou serviço é responsabilidade de quem emite a nota.</p>
+      <p>Cálculos: <a href="https://github.com/ReceitaFederal/calculadora-rtc-regime-regular" rel="noopener" target="_blank">calculadora-rtc-regime-regular</a>, <a href="https://github.com/ReceitaFederal/calculadora-rtc-simples-nacional" rel="noopener" target="_blank">calculadora-rtc-simples-nacional</a> e <a href="https://github.com/ReceitaFederal/calculadora-rtc-gerador-danfse" rel="noopener" target="_blank">calculadora-rtc-gerador-danfse</a> — Receita Federal do Brasil e Serpro, licença MIT. Site independente, sem vínculo com a Receita Federal.</p>
+    </div>
+  </footer>
+</body>
+</html>
